@@ -19,15 +19,21 @@ import statsmodels.graphics.tsaplots as tsa
 
 ### TUNING & CONFIG
 
-# Print all the graphs in PDF file (results/graphs.pdf)
+# Print all the graphs to PDF file (results/graphs.pdf)
 print_to_pdf = True
-
-
+# Print all the graphs to files  
+print_to_file = True
 
 ### CONSTANTS 
 
 input_data_loc = os.path.join("original_data", "airpollution", "LSTM-Multivariate_pollution.csv")
 pdf_file_loc = os.path.join("results", "graphs.pdf")
+image_file_loc = os.path.join("results");
+
+### INITIALIZATION
+
+if print_to_pdf:
+    pdf = PdfPages(pdf_file_loc)
 
 
 ### LOADING OF THE DATA
@@ -74,17 +80,21 @@ data['rain'] = scaler.fit_transform(tmp.reshape(-1, 1))
 
 dataNoTime = pd.DataFrame(data[['pollution', 'dew', 'temp', 'press', 'wnd_dir', 'wnd_spd', 'snow', 'rain']])
 
-#### EXPLORATORY ANALYSIS AND DRAWINGS
+#### EXPLORATORY ANALYSIS AND VISUALIZATIONS
 
 ## Autocorrelation matrix
 # print(dataNoTime.corr())
 
 ## ACF Plots
-#for lag in range(10, 1000, 30):
-#    fig = plt.figure()
-#    fig.title="ACF lags"
-#    tsa.plot_acf(data['pollution'], lags=lag)
-#    fig.show()
+for lag in [50, 1000, 20000]:
+    fig = plt.figure()
+    fig.title="ACF lags"
+    tsa.plot_acf(data['pollution'], lags=lag)
+    fig.show()
+    if print_to_pdf:
+        pdf.savefig(fig) 
+    if print_to_file:
+        fig.savefig(os.path.join(image_file_loc, "fig%d.png" % lag))
 
 
 ## PACF Plots
@@ -94,9 +104,12 @@ dataNoTime = pd.DataFrame(data[['pollution', 'dew', 'temp', 'press', 'wnd_dir', 
 #    tsa.plot_pacf(data['pollution'], lags=lag)
 #    fig.show()
 
-fig=plt.figure()
-tsa.plot_pacf(data['pollution'], lags=20000)
-fig.show()
+#fig=plt.figure()
+#tsa.plot_pacf(data['pollution'], lags=20000)
+#fig.show()
+
+
+pdf.close()
 sys.exit(0)
 
 
