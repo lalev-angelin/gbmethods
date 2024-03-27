@@ -75,21 +75,28 @@ data['rain'] = scaler.fit_transform(tmp.reshape(-1, 1))
 dataNoTime = pd.DataFrame(data[['pollution', 'dew', 'temp', 'press', 'wnd_dir', 'wnd_spd', 'snow', 'rain']])
 
 #### EXPLORATORY ANALYSIS AND DRAWINGS
-print(dataNoTime.corr())
 
-for lag in range(10, 1000, 30):
-    fig = plt.figure()
-    fig.title="ACF lags"
-    tsa.plot_acf(data['pollution'], lags=lag)
-    fig.show()
+## Autocorrelation matrix
+# print(dataNoTime.corr())
+
+## ACF Plots
+#for lag in range(10, 1000, 30):
+#    fig = plt.figure()
+#    fig.title="ACF lags"
+#    tsa.plot_acf(data['pollution'], lags=lag)
+#    fig.show()
 
 
-for lag in range(10, 1000, 30):
-    fig = plt.figure()
-    fig.title="PACF lags"
-    tsa.plot_pacf(data['pollution'], lags=lag)
-    fig.show()
+## PACF Plots
+#for lag in range(10, 10020, 1000):
+#    fig = plt.figure()
+#    fig.title="PACF lags"
+#    tsa.plot_pacf(data['pollution'], lags=lag)
+#    fig.show()
 
+fig=plt.figure()
+tsa.plot_pacf(data['pollution'], lags=20000)
+fig.show()
 sys.exit(0)
 
 
