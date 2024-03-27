@@ -15,14 +15,15 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 import seaborn as sns
 import statsmodels.graphics.tsaplots as tsa
-
+from keras.models import Sequential
+from keras.layers import Dense, SimpleRNN, LSTM
 
 ### TUNING & CONFIG
 
 # Print all the graphs to PDF file (results/graphs.pdf)
-print_to_pdf = True
+print_to_pdf = False
 # Print all the graphs to files  
-print_to_file = True
+print_to_file = False
 
 ### CONSTANTS 
 
@@ -86,19 +87,19 @@ dataNoTime = pd.DataFrame(data[['pollution', 'dew', 'temp', 'press', 'wnd_dir', 
 # print(dataNoTime.corr())
 
 ## ACF Plots
-for lag in [50, 1000, 20000]:
-    fig = plt.figure()
-    fig.title="ACF lags"
-    tsa.plot_acf(data['pollution'], lags=lag)
-    fig.show()
-    if print_to_pdf:
-        pdf.savefig(fig) 
-    if print_to_file:
-        fig.savefig(os.path.join(image_file_loc, "fig%d.png" % lag))
+#for lag in [50, 1000, 20000]:
+#    fig = plt.figure(figsize=(800, 600))
+#    fig.title="ACF lags"
+#    tsa.plot_acf(data['pollution'], lags=lag)
+#    fig.show()
+#    if print_to_pdf:
+#        pdf.savefig(fig) 
+#    if print_to_file:
+#        fig.savefig(os.path.join(image_file_loc, "fig%d.png" % lag))
 
 
 ## PACF Plots
-#for lag in range(10, 10020, 1000):
+#for lag in [50, 1000, 20000]:
 #    fig = plt.figure()
 #    fig.title="PACF lags"
 #    tsa.plot_pacf(data['pollution'], lags=lag)
@@ -109,14 +110,8 @@ for lag in [50, 1000, 20000]:
 #fig.show()
 
 
-pdf.close()
-sys.exit(0)
-
-
-
-
-
-
+if print_to_pdf: 
+    pdf.close()
 
 
 npData = np.array(dataNoTime)
