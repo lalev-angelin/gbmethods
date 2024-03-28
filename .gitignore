@@ -46,3 +46,4 @@ result.xml
 external-deps/python-lsp-server/.installation-dir/
 
 results/
+transformed_data/

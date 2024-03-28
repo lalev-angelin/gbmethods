@@ -16,7 +16,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 """
-This program graphs various statistical plots of M3 competition
+This program graphs various statistical plots 
 """
 
 from matplotlib.backends.backend_pdf import PdfPages
@@ -28,7 +28,7 @@ import altair as alt
 import seaborn as sns
 import numpy as np
 
-original = pd.read_csv('../original_data/airpollution/LSTM-Multivariate_pollution.csv',sep=',', decimal=".")
+original = pd.read_csv('original_data/airpollution/LSTM-Multivariate_pollution.csv',sep=',', decimal=".")
 original['date']=pd.to_datetime(original['date'])
 original['month']=original['date'].dt.month
 original['year']=original['date'].dt.year
