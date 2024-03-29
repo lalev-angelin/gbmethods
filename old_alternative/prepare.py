@@ -94,6 +94,23 @@ data['snow'] = scaler.fit_transform(tmp.reshape(-1, 1))
 tmp = data['rain'].to_numpy()
 data['rain'] = scaler.fit_transform(tmp.reshape(-1, 1))
 
+
+## Lagged data
+for i in range(1, hourly_lookback):
+    data['pollution-%d' % i] = data['pollution'].shift(i);
+for i in range(1, hourly_lookback):
+    data['dew-%d' % i] = data['dew'].shift(i);
+for i in range(1, hourly_lookback):
+    data['temp-%d' % i] = data['temp'].shift(i); 
+for i in range(1, hourly_lookback):
+    data['press-%d' % i] = data['press'].shift(i); 
+for i in range(1, hourly_lookback):
+    data['wnd_spd-%d' % i] = data['wnd_spd'].shift(i); 
+for i in range(1, hourly_lookback):
+    data['snow-%d' % i] = data['snow'].shift(i); 
+for i in range(1, hourly_lookback):
+    data['rain-%d' % i] = data['rain'].shift(i); 
+
 ## Daily and monthly
 
 data['month']= pd.to_datetime(data['date']).dt.month
@@ -108,9 +125,14 @@ data['d_avg_pollution']=daily_average_pollution
 weekly_average_pollution = data.groupby(['year', 'week'])['pollution'].transform("mean")
 data['w_avg_pollution'] = weekly_average_pollution
 
-monthly_average_pollution = data.groupby(['year', 'month'])['pollution'].transform('mean')
-data['m_avg_pollution']=monthly_average_pollution
 
+for i in range(1, daily_lookback):
+    data['d_avg_pollution-%d' % i] = data['d_avg_pollution'].shift(i*24)
+
+for i in range(1, weekly_lookback):
+    data['w_avg_pollution-%d' % i] = data['w_avg_pollution'].shift(i*24*7) 
+    data['w_avg_pollution-%d' % i] = data['w_avg_pollution-%d' % i].fillna(data['w_avg_pollution'][0])                                                                           # we don't start at exact 
+                                                                          
 
 data.to_csv(output_data_loc)
 
