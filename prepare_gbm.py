@@ -16,7 +16,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 """
-Data preparation for the LSTM model.
+Data preparation for the GB models.
 """
 
 import pandas as pd
