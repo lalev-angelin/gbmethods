@@ -16,7 +16,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 """
-Data preparation for the GB model.
+Data preparation for the LSTM model.
 """
 
 import pandas as pd
@@ -57,6 +57,44 @@ data = pd.read_csv(input_data_loc, sep=',', decimal=".")
 #print(data.head)
 
 
+### SCALING & TRANSFORMING
+scaler = MinMaxScaler(feature_range=(-1,1))
+
+# pollution
+tmp = data['pollution'].to_numpy()
+data['pollution'] = scaler.fit_transform(tmp.reshape(-1, 1))
+
+# dew 
+tmp = data['dew'].to_numpy()
+data['dew'] = scaler.fit_transform(tmp.reshape(-1, 1))
+
+# temp 
+tmp = data['temp'].to_numpy()
+data['temp'] = scaler.fit_transform(tmp.reshape(-1, 1))
+
+# press 
+tmp = data['press'].to_numpy()
+data['press'] = scaler.fit_transform(tmp.reshape(-1, 1))
+
+# wnd_dir 
+data['wnd_dir'] = data['wnd_dir'].replace(to_replace="SE", value=0.1)
+data['wnd_dir'] = data['wnd_dir'].replace(to_replace="NW", value=0.3)
+data['wnd_dir'] = data['wnd_dir'].replace(to_replace="NE", value=0.6)
+data['wnd_dir'] = data['wnd_dir'].replace(to_replace="cv", value=0.9)
+
+# wnd_spd 
+tmp = data['wnd_spd'].to_numpy()
+data['wnd_spd'] = scaler.fit_transform(tmp.reshape(-1, 1))
+
+# snow 
+tmp = data['snow'].to_numpy()
+data['snow'] = scaler.fit_transform(tmp.reshape(-1, 1))
+
+# rain 
+tmp = data['rain'].to_numpy()
+data['rain'] = scaler.fit_transform(tmp.reshape(-1, 1))
+
+
 ## Lagged data
 for i in range(1, hourly_lookback):
     data['pollution-%d' % i] = data['pollution'].shift(i);
@@ -92,6 +130,7 @@ for i in range(1, daily_lookback):
 
 for i in range(1, weekly_lookback):
     data['w_avg_pollution-%d' % i] = data['w_avg_pollution'].shift(i*24*7) 
+    data['w_avg_pollution-%d' % i] = data['w_avg_pollution-%d' % i].fillna(data['w_avg_pollution'][0])   
 
 monthly_average_pollution = data.groupby(['year', 'month'])['pollution'].transform('mean')
 data['m_avg_pollution']=monthly_average_pollution
@@ -110,4 +149,11 @@ for i in range(1, monthly_lookback):
     data.drop(['month-%d_month'%i], axis=1, inplace=True)
     data.drop('month-%d_year'%i, axis=1, inplace=True)
 
+
+
 data.to_csv(output_data_loc)
+
+        
+
+
+
