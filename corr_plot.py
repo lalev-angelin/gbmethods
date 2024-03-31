@@ -43,16 +43,20 @@ input_data_loc = os.path.join("transformed_data", "gbm_input-final.csv")
 ### LOADING OF THE DATA
 data = pd.read_csv(input_data_loc, sep=',', decimal=".")
 
-columns = data.columns.values
+columns = data.columns.to_list()
 print(columns)
-chosen = set(columns).difference(['Unnamed: 0' 'date' 'year_x' 'month_x' 'day' 'week' 'weekday' 'pollution'])
-print(chosen)
+columns.remove('Unnamed: 0')
+columns.remove('date')
+columns.remove('year_x')
+columns.remove('month_x')
 
-cov = data.cov(numeric_only=True)['pollution']
+
+
+cov = data.corr(numeric_only=True)['pollution']
 print(cov)
 cov.to_csv(os.path.join("results", "covmatrix.csv"))
 
-for c in chosen:
+for c in columns:
     fig,ax=plt.subplots()
     ax.plot(data['pollution'], data[c], "ro")
     ax.set_ylabel(c)
