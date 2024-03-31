@@ -8,6 +8,7 @@ import json
 from random import randint
 import seaborn as sns
 import numpy as np
+import pickle
 
 
 ### TUNING AND CONFIG
@@ -141,7 +142,9 @@ for iteration in range(0, 100):
         
         regressor.fit(trainX, trainY)
         
-        
+        file = open(os.path.join(result_dir, "lightgbm-model_i%d_%d."% (iteration,h)), "wb")
+        pickle.dump(regressor, file)
+        file.close()
                 
         ### PREDICT
         predictY = pd.DataFrame(regressor.predict(testX))
@@ -151,6 +154,7 @@ for iteration in range(0, 100):
         
         predictions.append(predictY[predictY.columns[0]].iloc[0])
     
+        
     
     
     # We got the last prediction first, so reverse
