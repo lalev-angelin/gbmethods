@@ -88,79 +88,119 @@ columns = ['wnd_spd', "wnd_spd-1", "wnd_spd-2", "wnd_spd-3", "wnd_spd-4", "wnd_s
 data = pd.read_csv(transformed_data_loc, sep=',', decimal='.')
 
 
-for h in range (0, 12):
-    if h!=0:
-        pol_col_name='pollution+%d'%h
-    else:
-        pol_col_name='pollution'
-
+for iteration in range(0, 100):
+    
+    skip_last_n_rows = skip_first_n_rows + (iteration*24)
+    
     ### SPLIT 
     
     X = data[columns][skip_first_n_rows:-skip_last_n_rows].reset_index().drop('index', axis=1)
-    Y = data[pol_col_name][skip_first_n_rows:-skip_last_n_rows].reset_index().drop('index', axis=1)
     dates = data['date'][skip_first_n_rows:-skip_last_n_rows].reset_index().drop('index', axis=1)
-    
+    # We split Y inside the loop, because Y comes from different col every iteration 
+    # of the loop
+    #X.to_csv(os.path.join("results", "debug_X.csv"))
+    #dates.to_csv(os.path.join("results", "debug_dates.csv"))
     
     trainX=X[:-24]
-    trainY=Y[:-24]
-    #print(trainX)
-    #print(trainY)
+    #trainX.to_csv(os.path.join("results", "debug_tainX.csv"))
     
-    testX=X[-24:]
-    testY=Y[-24:]
-    #print(testX)
-    #print(testY)
+    testX=X[-12:-11]
+    #estX.to_csv(os.path.join("results", "debug_testX.csv"))
     
-    ### FIT
-    regressor = LGBMRegressor(boosting_type="gbdt", 
-                              num_leaves=gbmparams['num_leaves'],
-                              max_depth=gbmparams['max_depth'], 
-                              learning_rate=gbmparams['learning_rate'], 
-                              n_estimators=gbmparams['n_estimators'])
+    predictions = []
     
-    regressor.fit(trainX, trainY)
+    for h in range (11, -1, -1):
+        if h!=0:
+            pol_col_name='pollution+%d'%h
+        else:
+            pol_col_name='pollution'
     
+        Y = data[pol_col_name][skip_first_n_rows:-skip_last_n_rows].reset_index().drop('index', axis=1)
+        #Y.to_csv(os.path.join("results", "debug_Y_%d.csv"%h))
         
-    ### PREDICT
+        trainY=Y[:-24]
+        #trainY.to_csv(os.path.join("results", "debug_tainY_%d.csv"%h))
+        
+        
+        #print(trainX)
+        #print(trainY)
+        
+    
+        testY=Y[-12:]
+        #testY.to_csv(os.path.join("results", "debug_textY_%d.csv"%h))
+        
+        #print(testX)
+        #print(testY)
+        
+        ### FIT
+        regressor = LGBMRegressor(boosting_type="gbdt", 
+                                  num_leaves=gbmparams['num_leaves'],
+                                  max_depth=gbmparams['max_depth'], 
+                                  learning_rate=gbmparams['learning_rate'], 
+                                  n_estimators=gbmparams['n_estimators'])
+        
+        regressor.fit(trainX, trainY)
+        
+        
+                
+        ### PREDICT
+        predictY = pd.DataFrame(regressor.predict(testX))
+        #predictY.to_csv(os.path.join("results", "debug_predictY_%d.csv"%h))
+    
+        #print(predictY)
+        
+        predictions.append(predictY[predictY.columns[0]].iloc[0])
+    
+    
+    
+    # We got the last prediction first, so reverse
+    predictions.reverse()
+    print(predictions)
+    
     predictY = pd.DataFrame(regressor.predict(X))
+    predictY = pd.concat([predictY[:-12], pd.Series(predictions)]).reset_index() 
     print(predictY)
     
+       
+     
     ### PLOT
     residuals = pd.concat([dates['date'], Y, predictY], axis=1)
-    residuals.rename(columns={residuals.columns.values[2]: "projected_pollution_lightgbm"}, inplace=True)
-    residuals['residuals']=residuals[pol_col_name] - residuals['projected_pollution_lightgbm']
+    residuals.drop(columns=['index'], inplace=False)
+    residuals.rename(columns={0: 'projected'}, inplace=True)
+    residuals['residuals']=residuals[pol_col_name] - residuals['projected']
     print(residuals)
     
-    
-    
-    sys.exit(0)
-    
-    
-    
+    smape = computeSMAPE(residuals[pol_col_name][:-12].tolist(),
+                         residuals['projected'][:-12].tolist())
     
     
     fig = plt.figure() 
-#    sns.lineplot(x=residuals['date'][-72:], y=residuals[pol_col_name][-72:])
-#    sns.lineplot(x=residuals['date'][-72:], y=residuals['projected_pollution_lightgbm'][-72:])
-    sns.lineplot(x=range(0,72), y=residuals[pol_col_name][-72:], label='actual', linestyle="dotted")
-    sns.lineplot(x=range(0,72), y=residuals['projected_pollution_lightgbm'][-72:], label='projected')
+    #    sns.lineplot(x=residuals['date'][-72:], y=residuals[pol_col_name][-72:])
+    #    sns.lineplot(x=residuals['date'][-72:], y=residuals['projected_pollution_lightgbm'][-72:])
+    sns.lineplot(x=range(0,72), y=residuals[pol_col_name][-72:], label='actual')
+    sns.lineplot(x=range(0,72), y=residuals['projected'][-72:], label='projected sMAPE=%s'%smape)
     plt.xlabel("Pollution on: %s + x hours"%residuals['date'].iloc[-72])   
     plt.axvline(72-24, color="red", linestyle='--')
-#    ax.xticks(rotation=90)
+    #    ax.xticks(rotation=90)
+    plt.savefig(os.path.join(result_dir, "series-i%d.png"%iteration))
     plt.show()
-
+    
+    
     
     fig = plt.figure(figsize=(19,6)) 
-    sns.lineplot(x=residuals['date'][-72:], y=residuals['residuals'][-72:])
+    #sns.lineplot(x=residuals['date'][-72:], y=residuals['residuals'][-72:])
+    sns.lineplot(x=range(0,72),y=residuals['residuals'][-72:])
     plt.axvline(72-24, color="red", linestyle='--')
-    plt.xticks(rotation=90)
+    #plt.xticks(rotation=90)
+    plt.xlabel("Pollution on: %s + x hours"%residuals['date'].iloc[-72])   
+    plt.savefig(os.path.join(result_dir, "residuals-i%d.png"%iteration))
     plt.show()
     
-   
+       
     ### SAVE
     
     lst_data = residuals[pol_col_name].tolist()
-    lst_projection = residuals['projected_pollution_lightgbm'].tolist()
+    lst_projection = residuals['projected'].tolist()
     
     saveData = {}
     saveData['method']='LightGBM'
@@ -171,6 +211,6 @@ for h in range (0, 12):
     saveData['sMAPE']=computeSMAPE(lst_data, lst_projection)
     strout = json.dumps(saveData, indent=2, cls=OurJSONEncoder)
     
-    file = open(os.path.join(result_dir, "lightgbm.json"), "w")
+    file = open(os.path.join(result_dir, "lightgbm-i%d.json"%iteration), "w")
     file.write(strout)
     file.close()
