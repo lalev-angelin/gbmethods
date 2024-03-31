@@ -40,6 +40,7 @@ hourly_lookback = 24           # Hourly data for pollution from n past hours
 daily_lookback = 7             # Daily aggregated data from n past days 
 weekly_lookback = 53           # Weekly aggregated data for n past weeks 
 monthly_lookback = 12          # Monthly aggregated data for n past months 
+horizon = 12
 
 ### CONSTANTS 
 
@@ -59,6 +60,8 @@ data = pd.read_csv(input_data_loc, sep=',', decimal=".")
 ## Lagged data
 for i in range(1, hourly_lookback):
     data['pollution-%d' % i] = data['pollution'].shift(i);
+for i in range(1, horizon):
+    data['pollution+%d' % i] = data['pollution'].shift(-i);
 for i in range(1, hourly_lookback):
     data['dew-%d' % i] = data['dew'].shift(i);
 for i in range(1, hourly_lookback):
